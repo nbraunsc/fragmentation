@@ -10,14 +10,19 @@ atomArray = root[0]
 bondArray = root[1]
 natoms = len(atomArray)
 
+atomtable = [[0 for x in range(5)] for y in range(natoms)] 
 for atomi in range(0, natoms):
-    atomsxyz = np.array([float(atomArray[atomi].attrib['x3']) , float(atomArray[atomi].attrib['y3']) , float(atomArray[atomi].attrib['z3'])])
-    atomselement = np.array([atomArray[atomi].attrib['elementType']])
-    atomsindex = np.array([int(atomi)])
-    #atomselement_index = np.append(atomselement, atomsindex)
-    atomtable = np.array([atomselement, atomsindex, atomsxyz])
-    #print(atomtable)
-    #print(atomtable)
+    atomsxyz = list([float(atomArray[atomi].attrib['x3']) , float(atomArray[atomi].attrib['y3']) , float(atomArray[atomi].attrib['z3'])])
+    atomselement = atomArray[atomi].attrib['elementType']
+    atomsindex = int(atomi)
+    atomtable[atomi][0] = atomselement 
+    atomtable[atomi][1] = atomsindex 
+    atomtable[atomi][2] = float(atomArray[atomi].attrib['x3'])
+    atomtable[atomi][3] = float(atomArray[atomi].attrib['y3'])
+    atomtable[atomi][4] = float(atomArray[atomi].attrib['z3'])
+
+print(atomtable[0])
+
 A = np.zeros( (natoms,natoms))
 for bondi in bondArray:
     a12 = bondi.attrib['atomRefs2'].split()
@@ -33,7 +38,7 @@ for bondi in bondArray:
     y = bond_table[1]
     z = bond_table[2]
     A[x][y] = z
-    A[y][x] = z
+
 #returning indices that have 1 or 2 in their spot (row, column)
 single = np.where(A == 1)
 double = np.where(A > 1)
@@ -42,12 +47,9 @@ listofsingle = list(zip(single[0], single[1]))
 
 #NEED to figure out how to remove duplicates!!!!
 for sbond in listofsingle:
-    singlebond = np.array(sbond)
-    for i in singlebond:
-        print(atomtable[i])
+    print(type(sbond))      
 for dbond in listofdouble:
-    doublebond = np.array(dbond)             
-    print(dbond)
+    print(dbond)             
 
 
 
