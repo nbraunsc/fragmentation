@@ -92,7 +92,7 @@ class Molecule():
                 for j in range(0, len(self.atomtable)):
                     if self.A[i][j] != 0 and self.atomtable[j][0] == "H" or self.A[i][j] > 1: 
                         self.prims[-1].append(j)
-        #gets rid of repeating prims, sets make sure order doesn't matter
+        #gets rid of repeating prims, sorted makes sure the order doesn't matter
         for i in range(0, len(self.prims)):
             self.prims[i] = tuple(sorted(self.prims[i]))
         self.prims = set(self.prims)
@@ -103,28 +103,27 @@ class Molecule():
             for frag in self.frags:
                 if prim in frag:
                     continue
-                self.frags.append(list(prim))
+                if iteration > 0:
+                    continue
+            self.frags.append(list(prim))
             for atom in prim:
                 for prim2 in self.prims:
                     for atom2 in prim2:
                         if self.A[atom][atom2] != 0:
-                            if atom2 in self.frags:
+                            if atom2 in self.frags[-1]:
                                 continue
                             for atom3 in prim2:
-                                self.frags.append(prim2)
-                                #self.frags[-1].append(prim2)
-        #for i in range(0, len(self.frags)):
-            #self.frags[i] = set(self.frags[i])
+                                self.frags[-1].append(atom3)
         iteration = iteration + 1
+        print(iteration)
         if iteration < eta:
-            print('d')
             self.get_frags(eta, iteration)
 
 if __name__ == "__main__":
     carbonyl = Molecule()
     carbonyl.parse_cml("carbonylavo.cml")
     carbonyl.get_prims()
-    carbonyl.get_frags(1, 0)
+    carbonyl.get_frags(2, 0)
     print(carbonyl.frags)
 
 
