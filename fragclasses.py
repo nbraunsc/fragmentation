@@ -97,25 +97,33 @@ class Molecule():
             self.prims[i] = tuple(sorted(self.prims[i]))
         self.prims = set(self.prims)
 
-    #eta is how high you want to go order wise, iteration = 0 to start
+    #eta is how high you want to go, eta = 0 is same as eta = 1 for one bond away, eta = 2 is two bonds away etc., iteration = 0 to start
     def get_frags(self, eta, iteration):
-        for prim in self.prims:
+        if iteration == 0:
+            for prim in self.prims:
+                for frag in self.frags:
+                    if prim in frag:
+                        continue
+                self.frags.append(list(prim))
+                for atom in prim:
+                    for prim2 in self.prims:
+                        for atom2 in prim2:
+                            if self.A[atom][atom2] != 0:
+                                if atom2 in self.frags[-1]:
+                                    continue
+                                for atom3 in prim2:
+                                    self.frags[-1].append(atom3)
+        if iteration != 0:
             for frag in self.frags:
-                if prim in frag:
-                    continue
-                if iteration > 0:
-                    continue
-            self.frags.append(list(prim))
-            for atom in prim:
-                for prim2 in self.prims:
-                    for atom2 in prim2:
-                        if self.A[atom][atom2] != 0:
-                            if atom2 in self.frags[-1]:
-                                continue
-                            for atom3 in prim2:
-                                self.frags[-1].append(atom3)
+                for atom in frag:
+                    for prim in self.prims:
+                        for atom2 in prim:
+                            if self.A[atom][atom2] != 0:
+                                if atom2 in self.frags[-1]:
+                                    continue
+                                for atom3 in prim:
+                                    self.frags[-1].append(atom3)
         iteration = iteration + 1
-        print(iteration)
         if iteration < eta:
             self.get_frags(eta, iteration)
 
