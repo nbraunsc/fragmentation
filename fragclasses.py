@@ -33,6 +33,7 @@ class Molecule():
         self.prims = []
         #first set of frags
         self.frags = []
+        self.newfrag = []
 
     def parse_cml(self, filename):
         self.filename = filename
@@ -48,16 +49,16 @@ class Molecule():
         self.natoms = len(self.atomArray)
         self.A = np.zeros( (self.natoms,self.natoms)) 
         #start of pulling molecule info from cml file
-        self.atomtable = [[0 for x in range(5)] for y in range(self.natoms)]
+        self.atomtable = [[0 for x in range(4)] for y in range(self.natoms)]
         for atomi in range(0, self.natoms):
             self.atomsxyz = list([float(atomArray[atomi].attrib['x3']) , float(atomArray[atomi].attrib['y3']) , float(atomArray[atomi].attrib['z3'])])
             self.atomselement = atomArray[atomi].attrib['elementType']
-            self.atomsindex = int(atomi)
+            #self.atomsindex = int(atomi)
             self.atomtable[atomi][0] = self.atomselement
-            self.atomtable[atomi][1] = self.atomsindex
-            self.atomtable[atomi][2] = float(atomArray[atomi].attrib['x3'])
-            self.atomtable[atomi][3] = float(atomArray[atomi].attrib['y3'])
-            self.atomtable[atomi][4] = float(atomArray[atomi].attrib['z3'])
+            #self.atomtable[atomi][1] = self.atomsindex
+            self.atomtable[atomi][1] = float(atomArray[atomi].attrib['x3'])
+            self.atomtable[atomi][2] = float(atomArray[atomi].attrib['y3'])
+            self.atomtable[atomi][3] = float(atomArray[atomi].attrib['z3'])
 
         #start extracting bond order
         for bondi in bondArray:
@@ -97,34 +98,31 @@ class Molecule():
             self.prims[i] = tuple(sorted(self.prims[i]))
         self.prims = set(self.prims)
 
-    #eta is how high you want to go, eta = 0 is same as eta = 1 for one bond away, eta = 2 is two bonds away etc., iteration = 0 to start
+    #eta is how high you want to go, eta = 0: prims, eta = 1:one bond, eta = 2:two bonds etc., iteration = 0 to start
     def get_frags(self, eta, iteration):
+        self.newfrag = []
         if iteration == 0:
             for prim in self.prims:
-                for frag in self.frags:
-                    if prim in frag:
-                        continue
                 self.frags.append(list(prim))
-                for atom in prim:
-                    for prim2 in self.prims:
-                        for atom2 in prim2:
-                            if self.A[atom][atom2] != 0:
-                                if atom2 in self.frags[-1]:
-                                    continue
-                                for atom3 in prim2:
-                                    self.frags[-1].append(atom3)
+        
         if iteration != 0:
             for frag in self.frags:
+                self.newfrag.append([])
                 for atom in frag:
                     for prim in self.prims:
                         for atom2 in prim:
                             if self.A[atom][atom2] != 0:
-                                if atom2 in self.frags[-1]:
+                                if atom2 in frag:
                                     continue
                                 for atom3 in prim:
-                                    self.frags[-1].append(atom3)
-        iteration = iteration + 1
+                                    self.newfrag[-1].append(atom3)
+        
+        for i in range(0, len(self.newfrag)):
+            for atom in self.newfrag[i]:
+                self.frags[i].append(atom)
+
         if iteration < eta:
+            iteration = iteration + 1
             self.get_frags(eta, iteration)
 
 if __name__ == "__main__":
@@ -133,5 +131,4 @@ if __name__ == "__main__":
     carbonyl.get_prims()
     carbonyl.get_frags(2, 0)
     print(carbonyl.frags)
-
 
