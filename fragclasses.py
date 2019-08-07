@@ -134,12 +134,10 @@ class Molecule():
         self.uniquefrags.append(self.sorted_list[-1])
         #need to say if all contents of frag are in uniquefrag then do not had to unique frag
         for frag in self.frags:
-            for atom in frag:
-                for ufrag in self.uniquefrags:
-                    for atom2 in ufrag:
-                        if atom == atom2:
-                            continue
-                        self.uniquefrags.append(frag)
+            for ufrag in self.uniquefrags:
+                if all(elem in frag for elem in ufrag):
+                    self.uniquefrags.append(frag)
+            
 
 if __name__ == "__main__":
     carbonyl = Molecule()
