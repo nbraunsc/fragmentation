@@ -33,7 +33,8 @@ class Molecule():
         self.prims = []
         #first set of frags
         self.frags = []
-        self.newfrag = []
+        #list of unique fragments:
+        self.uniquefrags = []
 
     def parse_cml(self, filename):
         self.filename = filename
@@ -120,15 +121,33 @@ class Molecule():
         for i in range(0, len(self.newfrag)):
             for atom in self.newfrag[i]:
                 self.frags[i].append(atom)
-
         if iteration < eta:
             iteration = iteration + 1
             self.get_frags(eta, iteration)
+
+    def remove_frags(self):
+        self.sorted_list = []
+        self.uniquefrags = []
+        for frag in range(0, len(self.frags)):
+            self.frags[frag].sort()
+        self.sorted_list = sorted(self.frags, key=len)
+        self.uniquefrags.append(self.sorted_list[-1])
+        #need to say if all contents of frag are in uniquefrag then do not had to unique frag
+        for frag in self.frags:
+            for atom in frag:
+                for ufrag in self.uniquefrags:
+                    for atom2 in ufrag:
+                        if atom == atom2:
+                            continue
+                        self.uniquefrags.append(frag)
 
 if __name__ == "__main__":
     carbonyl = Molecule()
     carbonyl.parse_cml("carbonylavo.cml")
     carbonyl.get_prims()
-    carbonyl.get_frags(2, 0)
-    print(carbonyl.frags)
+    carbonyl.get_frags(1, 0)
+    carbonyl.remove_frags()
+    print(carbonyl.uniquefrags)
+
+
 
