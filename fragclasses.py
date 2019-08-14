@@ -20,7 +20,7 @@ class Molecule():
         #table with labels of integers for atoms, starting at 0, type: np array
         self.bond_lables = []
         #table with just bond orders, type: np array
-        self.bond_dict = []
+        self.bond_order = []
         #table with labels and bond order, type:numpy.array
         self.bond_table = []
         #connectivity matrix
@@ -35,6 +35,7 @@ class Molecule():
         self.frags = []
         #list of unique fragments:
         self.uniquefrags = []
+        self.frag_inter = []
 
     def parse_cml(self, filename):
         self.filename = filename
@@ -71,8 +72,8 @@ class Molecule():
             a1 = np.array([int(a12[0][1:])-1])
             a2 = np.array([int(a12[1][1:])-1])
             self.bond_labels = np.append(a1,a2)
-            self.bond_dict = np.array([int(bondi.attrib["order"])])
-            self.bond_table = np.append(self.bond_labels, self.bond_dict)
+            self.bond_order = np.array([int(bondi.attrib["order"])])
+            self.bond_table = np.append(self.bond_labels, self.bond_order)
             #these need to be within for loop, don't know if need self.
             x = self.bond_table[0]
             y = self.bond_table[1]
@@ -92,20 +93,28 @@ class Molecule():
             if self.atomtable[i][0] != "H":
                 self.prims.append([i])
                 for j in range(0, len(self.atomtable)):
-                    if self.A[i][j] != 0 and self.atomtable[j][0] == "H" or self.A[i][j] > 1: 
+                    if self.A[i][j] == 1 and self.atomtable[j][0] == "H" or self.A[i][j] > 1:
                         self.prims[-1].append(j)
+                    for k in range(0, len(self.atomtable)):
+                        if self.A[i][j] > 1 and self.A[j][k] == 1 and self.atomtable[k][0] != "C":
+                            self.prims[-1].append(j)
+                            self.prims[-1].append(k)
+        
+        #deletes duplicates within a prim
+        self.prims = list(set(x) for x in self.prims)
+
         #gets rid of repeating prims, sorted makes sure the order doesn't matter
         for i in range(0, len(self.prims)):
             self.prims[i] = tuple(sorted(self.prims[i]))
         self.prims = set(self.prims)
-
+        
     #eta is how high you want to go, eta = 0: prims, eta = 1:one bond, eta = 2:two bonds etc., iteration = 0 to start
     def get_frags(self, eta, iteration):
-        self.newfrag = []
+        self.newfrag =[]
         if iteration == 0:
             for prim in self.prims:
                 self.frags.append(list(prim))
-        
+                
         if iteration != 0:
             for frag in self.frags:
                 self.newfrag.append([])
@@ -117,7 +126,6 @@ class Molecule():
                                     continue
                                 for atom3 in prim:
                                     self.newfrag[-1].append(atom3)
-        
         for i in range(0, len(self.newfrag)):
             for atom in self.newfrag[i]:
                 self.frags[i].append(atom)
@@ -126,26 +134,38 @@ class Molecule():
             self.get_frags(eta, iteration)
 
     def remove_frags(self):
-        self.sorted_list = []
         self.uniquefrags = []
-        for frag in range(0, len(self.frags)):
-            self.frags[frag].sort()
-        self.sorted_list = sorted(self.frags, key=len)
-        self.uniquefrags.append(self.sorted_list[-1])
-        #need to say if all contents of frag are in uniquefrag then do not had to unique frag
-        for frag in self.frags:
-            for ufrag in self.uniquefrags:
-                if all(elem in frag for elem in ufrag):
-                    self.uniquefrags.append(frag)
+        self.frags = list(set(x) for x in self.frags)
+        print(self.frags)
+        for i in range(0, len(self.frags)):
             
+            for j in range(i+1, len(self.frags)):
+                print(str(i) + " " +str(j)) 
+                if self.frags[i].issubset(self.frags[j]):
+                    continue
+                self.uniquefrags.append(self.frags[i])
+                    #if all atoms are described with eta bonds, remove all the remaining fragments
+                if self.natoms == len(self.uniquefrags[0]):
+                    for k in range(1, len(self.uniquefrags)):
+                        self.uniquefrags.remove(self.uniquefrags[k])
+        #if eta is larger than bonds allow thus all i's are a subset of j add 1st entry in self.frags
+        if len(self.uniquefrags) == 0:
+            self.uniquefrags.append(self.frags[0])
+    
+    def frag_conn(self):
+        self.frag_inter = []
+        for i in self.uniquefrags:
+            for j in self.uniquefrags:
+                if i != j:
+                    if i.isdisjoint(j):
+                        continue
+                    self.frag_inter = i.intersection(j)
 
 if __name__ == "__main__":
     carbonyl = Molecule()
-    carbonyl.parse_cml("carbonylavo.cml")
+    carbonyl.parse_cml("largermol.cml")
     carbonyl.get_prims()
     carbonyl.get_frags(1, 0)
     carbonyl.remove_frags()
+    carbonyl.frag_conn()
     print(carbonyl.uniquefrags)
-
-
-
