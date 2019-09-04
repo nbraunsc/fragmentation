@@ -34,10 +34,10 @@ class Molecule():
         self.primchart = []
         self.molchart = []
         #first set of frags
-        self.frag = []
-        #list of unique fragments:
+        self.fragments = []
+        #unqiue fragments
         self.uniquefrags = []
-        self.frag_inter = []
+        self.fullmolecule = []
 
     def parse_cml(self, filename):
         self.filename = filename
@@ -157,6 +157,7 @@ class Molecule():
             self.get_molmatrix(eta, i)
     
     def get_frag(self, deg):    #deg is the degree of fragments wanted
+        self.frag = []
         for x in range(0, len(self.molchart)):
             for y in range(0, len(self.molchart)):
                 if self.molchart[x][y] <= deg and self.molchart[x][y] != 0:
@@ -169,61 +170,28 @@ class Molecule():
                     continue
                 if self.frag[z][0] == self.frag[w][0]:
                     self.frag[z].extend(self.frag[w][:])    #combines all prims with frag connectivity <= eta, list of lists
-            
+        
         for i in range(0, len(self.frag)): 
             self.frag[i] = set(self.frag[i])    #makes into a list of sets
-        print(self.frag) 
         
-        for i in range(0, len(self.frag)):      #removes repeating frags
-            for j in range(0, len(self.frag)):
-                if i != j and self.frag[i] == self.frag[j]:
-                    del self.frag[j]
-        print(self.frag)
-
-    def get_frags(self, eta, iteration):   #old version of getting fragments 
-        self.newfrag =[]
-        if iteration == 0:
-            for prim in self.prims:
-                self.frags.append(list(prim))
-                
-        if iteration != 0:
-            for frag in self.frags:
-                self.newfrag.append([])
-                for atom in frag:
-                    for prim in self.prims:
-                        for atom2 in prim:
-                            if self.A[atom][atom2] != 0:
-                                if atom2 in frag:
-                                    continue
-                                for atom3 in prim:
-                                    self.newfrag[-1].append(atom3)
-        for i in range(0, len(self.newfrag)):
-            for atom in self.newfrag[i]:
-                self.frags[i].append(atom)
-        if iteration < eta:
-            iteration = iteration + 1
-            self.get_frags(eta, iteration)
-
-    def remove_frags(self):     #old version of removing repeating frags
-        self.uniquefrags = []
-        self.frags = list(set(x) for x in self.frags)
-        for i in range(0, len(self.frags)):
-            add = True 
-            for j in range(i+1, len(self.frags)):
-                if self.frags[i].issubset(self.frags[j]) or self.frags[i] == self.frags[j]:
+        for k in range(0, len(self.frag)):
+            if self.frag[k] in self.fragments:
+                continue
+            self.fragments.append(self.frag[k])
+                   
+    def remove_frags(self):
+        for i in range(0, len(self.fragments)):
+            add = True
+            for j in range(i+1, len(self.fragments)):
+                if self.fragments[i].issubset(self.fragments[j]) or self.fragments[j].issubset(self.fragments[i]) or self.fragments[i] == self.fragments[j]:
                     add = False
             if add == True:
-                self.uniquefrags.append(self.frags[i])
-                
-    def frag_conn(self):        #old version of finding frag connectivity
-        self.frag_inter = []
-        for i in range(0, len(self.uniquefrags)):
-            add = True
-            for j in range(i+1, len(self.uniquefrags)):
-                if self.uniquefrags[i].isdisjoint(self.uniquefrags[j]):
-                    add = False
-                if add == True:
-                    self.frag_inter.append(self.uniquefrags[i].intersection(self.uniquefrags[j]))
+                self.uniquefrags.append(self.fragments[i])
+        
+        #for frag in self.fragments:       #in here in case full molecule is described
+            #if len(frag) == len(self.prims):
+                #self.uniquefrags.append(frag)
+
 
 if __name__ == "__main__":
     carbonyl = Molecule()
@@ -231,8 +199,6 @@ if __name__ == "__main__":
     carbonyl.get_prims()
     carbonyl.prim_conn()
     carbonyl.get_molmatrix(10, 2)
-    carbonyl.get_frag(2)
-    
-
-
-
+    carbonyl.get_frag(1)
+    carbonyl.remove_frags()
+    print(carbonyl.uniquefrags)
