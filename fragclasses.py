@@ -192,6 +192,36 @@ class Molecule():
             #if len(frag) == len(self.prims):
                 #self.uniquefrags.append(frag)
 
+    def frag_conn(self):        #finds union of frags, problem is idk how to properly map fragments to correct interstions for calculations
+        self.fragconn = []
+        for i in range(0, len(self.uniquefrags)):
+            add = True
+            for j in range(i+1, len(self.uniquefrags)):
+                if self.uniquefrags[i].isdisjoint(self.uniquefrags[j]):
+                    add = False
+                if add == True:
+                    self.fragconn.append(self.uniquefrags[i].intersection(self.uniquefrags[j]))
+
+        print(self.fragconn)
+
+    def make_fragxyz(self):
+        atomlist = []
+        for frag in range(0, len(self.uniquefrags)):
+            self.uniquefrags[frag] = list(self.uniquefrags[frag])
+
+        for i in range(0, len(self.uniquefrags)):   #makes new list for each fragment
+            self.fragxyzi = []
+
+        for frag in self.uniquefrags:   #adding coordinates to list of lists
+            for prim in frag:
+                for i in self.prims:
+                    for atom in i:
+                        atomlist[frag][-1].append([self.prims[prim]])
+        print(atomlist)
+                
+                #self.fragxyzi.append(self.atomtable[j])
+    #def make_connxyz(self):
+
 
 if __name__ == "__main__":
     carbonyl = Molecule()
@@ -202,3 +232,6 @@ if __name__ == "__main__":
     carbonyl.get_frag(1)
     carbonyl.remove_frags()
     print(carbonyl.uniquefrags)
+    carbonyl.frag_conn()
+    carbonyl.make_fragxyz()
+
