@@ -98,7 +98,7 @@ class Molecule():
                     if self.A[i][j] == 1 and self.atomtable[j][0] == "H" or self.A[i][j] > 1:
                         self.prims[-1].append(j)
                     for k in range(0, len(self.atomtable)):
-                        if self.A[i][j] > 1 and self.A[j][k] == 1 and self.atomtable[k][0] != "C":
+                        if self.A[i][j] > 1 and self.A[j][k] == 1 and self.atomtable[k][0] == "H":
                             self.prims[-1].append(j)
                             self.prims[-1].append(k)
         
@@ -225,13 +225,16 @@ class Molecule():
 
 if __name__ == "__main__":
     carbonyl = Molecule()
-    carbonyl.parse_cml("largermol.cml")
+    carbonyl.parse_cml("aspirin.cml")
     carbonyl.get_prims()
+    print(carbonyl.atomtable)
+    print(carbonyl.prims)
     carbonyl.prim_conn()
-    carbonyl.get_molmatrix(10, 2)
+    print(carbonyl.primchart)
+    carbonyl.get_molmatrix(10, 3)
+    print(carbonyl.molchart)
     carbonyl.get_frag(1)
     carbonyl.remove_frags()
     print(carbonyl.uniquefrags)
     carbonyl.frag_conn()
-    carbonyl.make_fragxyz()
 
