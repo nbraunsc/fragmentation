@@ -1,2 +1,0 @@
-# fragment
-MOB method, pyscf
